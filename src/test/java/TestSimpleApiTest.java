@@ -1,127 +1,253 @@
-import org.junit.jupiter.api.Test;
+import com.jayway.restassured.response.ExtractableResponse;
+import com.jayway.restassured.response.Response;
+import org.junit.jupiter.api.*;
+import org.openqa.selenium.json.Json;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.io.*;
 import java.util.Scanner;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TestSimpleApiTest {
 
-    Integer SessionIdVar = 0;
+    public static Integer SessionIdVar;
+    public static Integer SubscriptionId = 0;
+    public static String IdText = "";
+    public static String IdPump = "";
+    public static String host = "http://"+System.getProperty("HostIP")+"/Methods/";
+    //public static String host = "http://"+"127.0.0.1:8043"+"/Methods/";
 
-    @Test
-    public void getSecondPosts() throws IOException {
+    public static String  RequestResultWriteData(String Flag) throws IOException {
+        String URL = host + "WriteData";
+        Response LoginRequest = null;
+        Integer RequestCode;
+        String Result = "";
 
-     //Получаем id параметра из фала из предыдущего теста
-     String dataId = "";
-        FileReader fr = new FileReader("C:\\\\Users\\\\User\\\\Desktop\\\\Work\\\\AutomationJavaTests\\\\Editor\\\\id\\\\id.txt");
+        String WriteData = "{\"recs\":[{\"taskId\":0,\"dataSourceId\":\"MPLCDataSource\",\"itemId\":"+IdPump+
+                ",\"path\":\"PumpControl_ID_35876.RunButton\",\"operation\":\"move\",\"type\":\"BOOL\"," +
+                "\"usesCounts\":1,\"value\":"+Flag+"}],\"sessionId\":"+SessionIdVar+"}";
+
+        System.out.println("WriteData: "+ WriteData);
+
+        LoginRequest =  given().
+                        contentType("application/json").
+                        body(WriteData).
+                        when().
+                        post(URL).
+                        then().statusCode(200).extract().response();
+
+        RequestCode = LoginRequest.path("code");
+        assertFalse(RequestCode != 0);
+        Result = "Test passed";
+        return (Result);
+    }
+
+    public static Boolean RequestResultPublishData(String ackSequenceNumber) throws IOException {
+        String URL = host + "PublishData";
+        Response LoginRequest = null;
+        Integer RequestCode = 0;
+        ArrayList AnswerPublishData;
+        String ReadPublish0 = "{\"ackSequenceNumber\":"+ackSequenceNumber+",\"subscriptionId\":"+SubscriptionId+",\"sessionId\":"+SessionIdVar+"}";
+        System.out.println("ReadPublish0: "+ ReadPublish0);
+        LoginRequest =  given().
+                        contentType("application/json").
+                        body(ReadPublish0).
+                        when().
+                        post(URL).
+                        then().statusCode(200).extract().response();
+        RequestCode = LoginRequest.path("code");
+        AnswerPublishData = LoginRequest.path("recs");
+        assertFalse(RequestCode != 0);
+        Boolean Result = AnswerPublishData.get(1).toString().contains("value=true");
+        System.out.println(Result);
+        return Result;
+    }
+
+
+    @BeforeAll
+
+    static void GetIdFromIDETest() throws IOException {
+        //Получаем id параметра из файла из предыдущего теста
+
+        FileReader fr = new FileReader("C:\\Users\\kiril\\Desktop\\Autotests\\IDE\\Data.txt");
         Scanner scan = new Scanner(fr);
+        String[] GetDataId = new String[3];
         int i = 1;
         while (scan.hasNextLine()) {
-            dataId = scan.nextLine();
+            GetDataId[i] = scan.nextLine();
             //System.out.println(scan.nextLine());
+            System.out.println(GetDataId[i]);
             i++;
         }
         fr.close();
-        System.out.println(dataId);
+        IdText = GetDataId[1];
+        IdPump = GetDataId[2];
+    }
+
+
+    @DisplayName("GetState")
+    @Test
+    @Tag("GetState")
+    @Order(1)
+    public void GetState() {
+        String NameMethod = "GetState";
+        String URL = host + NameMethod;
+        Integer RequestCode = 0;
+
+        //получить Состояние сервера
+        RequestCode = when().post(URL).then().statusCode(200).extract().path("code");
+        System.out.println("GetState RequestCode: " + RequestCode);
+        assertFalse(RequestCode != 0);
+    }
+
+    @DisplayName("GetLoginData")
+    @Test
+    @Tag("GetLoginData")
+    @Order(2)
+    public void GetLoginData() {
+        String NameMethod = "GetLoginData";
+        String URL = host + NameMethod;
+        Integer RequestCode = 0;
+
+        //получить Состояние сервера
+        RequestCode = when().post(URL).then().statusCode(200).extract().path("code");
+        System.out.println("GetState RequestCode: " + RequestCode);
+        assertFalse(RequestCode != 0);
+    }
+
+    @DisplayName("Login")
+    @Test
+    @Tag("Login")
+    @Order(3)
+    public void Login() {
+        String NameMethod = "Login";
+        String URL = host + NameMethod;
+        Response LoginRequest = null;
+        Integer RequestCode = 0;
 
         //получить SessionId
-        SessionIdVar = when().post("http://127.0.0.1:8043/Methods/Login").then().statusCode(200).extract().path("sessionId");
-        System.out.println("SessionId: " + SessionIdVar);
+        LoginRequest = when().post(URL).then().statusCode(200).extract().response();
+        RequestCode = LoginRequest.path("code");
+        SessionIdVar = LoginRequest.path("sessionId");
+        System.out.println(SessionIdVar);
+        assertFalse(RequestCode != 0);
+    }
+
+    @DisplayName("CreateDataSubscription")
+    @Test
+    @Tag("CreateDataSubscription")
+    @Order(4)
+    public void CreateDataSubscription() {
+        String NameMethod = "CreateDataSubscription";
+        String URL = host + NameMethod;
+        Response LoginRequest = null;
+        Integer RequestCode = 0;
 
         //http://127.0.0.1:8043/Methods/CreateDataSubscription
         String CreateDataSubscription = "{\"requestedPublishingInterval\":100,\"requestedLifetimeInterval\":120000,\"maxNotificationsPerPublish\":0,\"maxSize\":1000,\"sessionId\":"+SessionIdVar+"}";
         System.out.println("CreateDataSubscription: "+ CreateDataSubscription);
 
-        Integer SubscriptionId =
+        LoginRequest =
                 given().
-                contentType("application/json").
-                body(CreateDataSubscription).
-                when().
-                post("http://127.0.0.1:8043/Methods/CreateDataSubscription").
-                then().statusCode(200).extract().path("subscriptionId");
+                        contentType("application/json").
+                        body(CreateDataSubscription).
+                        when().
+                        post(URL).
+                        then().statusCode(200).extract().response();
+
+        SubscriptionId = LoginRequest.path("subscriptionId");
+        RequestCode = LoginRequest.path("code");
         System.out.println("subscriptionId: " + SubscriptionId);
+        assertFalse(RequestCode != 0);
+    }
+
+    @DisplayName("CreateMonitoredDataItems")
+    @Test
+    @Tag("CreateMonitoredDataItems")
+    @Order(5)
+    public void CreateMonitoredDataItems() {
+        String NameMethod = "CreateMonitoredDataItems";
+        String URL = host + NameMethod;
+        Response LoginRequest = null;
+        Integer RequestCode = 0;
 
         // http://127.0.0.1:8043/Methods/CreateMonitoredDataItems
-        String CreateMonitoredDataItems = "{\"subscriptionId\":"+SubscriptionId+",\"items\":[{\"taskId\":0,\"itemId\":"+dataId+",\"path\":\"\",\"type\":\"BOOL\",\"dataSourceId\":\"MPLCDataSource\",\"clientHandle\":1,\"usesCounts\":1}],\"sessionId\":"+SessionIdVar+"}";
+        String CreateMonitoredDataItems = "{\"subscriptionId\":"+SubscriptionId+"," +
+                "\"items\":[{\"taskId\":0,\"itemId\":"
+                +IdPump+",\"path\":\"Sostoyaniya_Rezhim\",\"type\":\"BaseObjects.Mode\",\"dataSourceId\":\"MPLCDataSource\"," +
+                "\"clientHandle\":1,\"usesCounts\":1},{\"taskId\":0,\"itemId\":"+IdPump+",\"path\":\"UprVihod\"," +
+                "\"type\":\"BOOL\",\"dataSourceId\":\"MPLCDataSource\",\"clientHandle\":2,\"usesCounts\":1}," +
+                "{\"taskId\":0,\"itemId\":"+IdText+",\"path\":\"\",\"type\":\"BOOL\",\"dataSourceId\":\"MPLCDataSource\"" +
+                ",\"clientHandle\":3,\"usesCounts\":1}],"
+                +"\"sessionId\":"+SessionIdVar+"}";
         System.out.println("CreateMonitoredDataItems: "+ CreateMonitoredDataItems);
 
-        given().contentType("application/json").
-                body(CreateMonitoredDataItems).
-                when().
-                post("http://127.0.0.1:8043/Methods/CreateMonitoredDataItems").
-                then().
-                statusCode(200)
-        ;
-
-        String GetTrue = "{\"recs\":[{\"taskId\":0,\"dataSourceId\":\"MPLCDataSource\",\"itemId\":"+dataId+",\"path\":\"\",\"operation\":\"move\",\"type\":\"BOOL\",\"usesCounts\":1,\"value\":true}],\"sessionId\":"+SessionIdVar+"}";
-        String GetFalse = "{\"recs\":[{\"taskId\":0,\"dataSourceId\":\"MPLCDataSource\",\"itemId\":"+dataId+",\"path\":\"\",\"operation\":\"move\",\"type\":\"BOOL\",\"usesCounts\":1,\"value\":false}],\"sessionId\":"+SessionIdVar+"}";
-        String ReadPublish1 = "{\"ackSequenceNumber\":1,\"subscriptionId\":"+SubscriptionId+",\"sessionId\":"+SessionIdVar+"}";
-        String ReadPublish2 = "{\"ackSequenceNumber\":2,\"subscriptionId\":"+SubscriptionId+",\"sessionId\":"+SessionIdVar+"}";
-
-        //http://127.0.0.1:8043/Methods/WriteData
-                given().contentType("application/json").
-                body(GetTrue).
-                when().
-                post("http://127.0.0.1:8043/Methods/WriteData").
-                then().
-                statusCode(200)
-        ;
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-                given().contentType("application/json").
-                body(GetFalse).
-                when().
-                post("http://127.0.0.1:8043/Methods/WriteData").
-                then().
-                statusCode(200)
-        ;
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        given().contentType("application/json").
-                body(GetTrue).
-                when().
-                post("http://127.0.0.1:8043/Methods/WriteData").
-                then().
-                statusCode(200)
-        ;
-
-        ArrayList<String> namesList =
-                given().contentType("application/json").
-                        body(ReadPublish1).
+        LoginRequest =
+                given().
+                        contentType("application/json").
+                        body(CreateMonitoredDataItems).
                         when().
-                        post("http://127.0.0.1:8043/Methods/PublishData").
-                        then().statusCode(200).extract().path("recs")
+                        post(URL).
+                        then().statusCode(200).extract().response();
 
-                ;
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        ArrayList AnswerPublishData =
-                given().contentType("application/json").
-                        body(ReadPublish1).
-                        when().
-                        post("http://127.0.0.1:8043/Methods/PublishData").
-                        then().statusCode(200).extract().path("recs")
-
-                ;
-
-        Boolean Result = AnswerPublishData.get(0).toString().contains("value=true");
-        System.out.println(Result);
-
+        RequestCode = LoginRequest.path("code");
+        assertFalse(RequestCode != 0);
     }
+
+    @DisplayName("WriteDataTrue")
+    @Test
+    @Tag("WriteDataTrue")
+    @Order(6)
+    public void WriteData() throws IOException, InterruptedException {
+        RequestResultWriteData("true");
+        Thread.sleep(1000);
+    }
+
+    @DisplayName("PublishData")
+    @Test
+    @Tag("PublishData")
+    @Order(7)
+    public void PublishData() throws IOException, InterruptedException {
+        RequestResultPublishData("0");
+        Thread.sleep(1000);
+    }
+
+    @DisplayName("WriteDataFalse")
+    @Test
+    @Tag("WriteDataFalse")
+    @Order(8)
+    public void WriteData1() throws IOException, InterruptedException {
+        RequestResultWriteData("false");
+        Thread.sleep(1000);
+    }
+
+    @DisplayName("PublishData1")
+    @Test
+    @Tag("PublishData")
+    @Order(9)
+    public void PublishData1() throws IOException, InterruptedException {
+        RequestResultPublishData("1");
+        Thread.sleep(1000);
+    }
+
+    @DisplayName("WriteDataTrue1")
+    @Test
+    @Tag("WriteDataTrue")
+    @Order(10)
+    public void WriteData2() throws IOException, InterruptedException {
+        RequestResultWriteData("true");
+        Thread.sleep(1000);
+    }
+
+    @DisplayName("PublishData2")
+    @Test
+    @Tag("PublishData")
+    @Order(11)
+    public void PublishData2() throws IOException {
+        RequestResultPublishData("2");
+    }
+
 }

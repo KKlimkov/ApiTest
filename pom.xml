@@ -23,7 +23,18 @@
 
                     <systemPropertyVariables>
                         <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+
                     </systemPropertyVariables>
+
+                    <!-- deprecated -->
+                    <systemProperties>
+                        <property>
+                            <name>HostIP</name>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <value>${HostIP}</value>
+                        </property>
+                    </systemProperties>
+
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -90,6 +101,8 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
 </project>
