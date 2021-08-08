@@ -1,14 +1,14 @@
-import com.jayway.restassured.response.ExtractableResponse;
-import com.jayway.restassured.response.Response;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.json.Json;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.io.*;
 import java.util.Scanner;
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.when;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import io.restassured.response.Response;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TestSimpleApiTest {
