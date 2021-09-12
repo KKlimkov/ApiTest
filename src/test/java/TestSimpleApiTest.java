@@ -1,8 +1,11 @@
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.json.Json;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.io.*;
+import java.util.Optional;
 import java.util.Scanner;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -27,7 +30,7 @@ public class TestSimpleApiTest {
         String Result = "";
 
         String WriteData = "{\"recs\":[{\"taskId\":0,\"dataSourceId\":\"MPLCDataSource\",\"itemId\":"+IdPump+
-                ",\"path\":\"PumpControl_ID_35876.RunButton\",\"operation\":\"move\",\"type\":\"BOOL\"," +
+                ",\"path\":\"PumpControl_ID_36216.RunButton\",\"operation\":\"move\",\"type\":\"BOOL\"," +
                 "\"usesCounts\":1,\"value\":"+Flag+"}],\"sessionId\":"+SessionIdVar+"}";
 
         System.out.println("WriteData: "+ WriteData);
@@ -72,19 +75,11 @@ public class TestSimpleApiTest {
     static void GetIdFromIDETest() throws IOException {
         //Получаем id параметра из файла из предыдущего теста
 
-        FileReader fr = new FileReader("C:\\Users\\kiril\\Desktop\\Autotests\\IDE\\Data.txt");
-        Scanner scan = new Scanner(fr);
-        String[] GetDataId = new String[3];
-        int i = 1;
-        while (scan.hasNextLine()) {
-            GetDataId[i] = scan.nextLine();
-            //System.out.println(scan.nextLine());
-            System.out.println(GetDataId[i]);
-            i++;
-        }
-        fr.close();
-        IdText = GetDataId[1];
-        IdPump = GetDataId[2];
+        String fileName = "C:\\Users\\kiril\\Desktop\\Autotests\\IDE\\Data.csv";
+        Optional<String> line = Files.lines(Paths.get(fileName)).findFirst();
+        String[] words = line.get().split(",");
+        IdText = words[0];
+        IdPump = words[1];
     }
 
 
