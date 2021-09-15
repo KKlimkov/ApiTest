@@ -30,7 +30,7 @@ public class TestSimpleApiTest {
         String Result = "";
 
         String WriteData = "{\"recs\":[{\"taskId\":0,\"dataSourceId\":\"MPLCDataSource\",\"itemId\":"+IdPump+
-                ",\"path\":\"PumpControl_ID_36216.RunButton\",\"operation\":\"move\",\"type\":\"BOOL\"," +
+                ",\"path\":\"PumpControl_ID_36926.RunButton\",\"operation\":\"move\",\"type\":\"BOOL\"," +
                 "\"usesCounts\":1,\"value\":"+Flag+"}],\"sessionId\":"+SessionIdVar+"}";
 
         System.out.println("WriteData: "+ WriteData);
